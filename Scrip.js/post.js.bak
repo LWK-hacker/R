@@ -1,0 +1,194 @@
+const currentUser = JSON.parse(localStorage.getItem("reelza_logged_in"));
+if (!currentUser) {
+  window.location.href = "login.html";
+}
+
+document.getElementById("userInfo").innerText =
+  "Hello, " + currentUser.username + " (" + currentUser.email + ")";
+
+document.getElementById("postForm").addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const caption = document.getElementById("caption").value;
+  const mediaFile = document.getElementById("media").files[0];
+  const postStatus = document.getElementById("postStatus");
+
+  if (!mediaFile) {
+    postStatus.innerText = "Please select a media file.";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onloadend = function () {
+    const mediaData = reader.result;
+
+    let users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+    const index = users.findIndex((u) => u.email === currentUser.email);
+
+    const newPost = {
+      caption: caption,
+      media: mediaData,
+      type: mediaFile.type.startsWith("video") ? "video" : "image",
+      timestamp: new Date().toLocaleString(),
+    };
+
+    users[index].posts.push(newPost);
+    localStorage.setItem("reelza_users", JSON.stringify(users));
+
+    // Update session user
+    currentUser.posts.push(newPost);
+    localStorage.setItem("reelza_logged_in", JSON.stringify(currentUser));
+
+    postStatus.innerText = "Post created!";
+    document.getElementById("postForm").reset();
+    renderPosts();
+  };
+
+  reader.readAsDataURL(mediaFile);
+});
+
+function renderPosts() {
+  const container = document.getElementById("postList");
+  container.innerHTML = "";
+
+  if (!currentUser.posts || currentUser.posts.length === 0) {
+    container.innerText = "No posts yet.";
+    return;
+  }
+
+  currentUser.posts.reverse().forEach((post) => {
+    const postDiv = document.createElement("div");
+    postDiv.style.marginBottom = "20px";
+
+    if (post.type === "image") {
+      postDiv.innerHTML = `
+        <img src="${post.media}" width="100%" style="max-height:300px;object-fit:contain;border-radius:8px;" /><br>
+      `;
+    } else {
+      postDiv.innerHTML = `
+        <video controls width="100%" style="max-height:300px;border-radius:8px;">
+          <source src="${post.media}" type="video/mp4" />
+        </video><br>
+      `;
+    }
+
+    postDiv.innerHTML += `
+      <p>${post.caption}</p>
+      <small>${post.timestamp}</small>
+      <hr style="border-color: #444;">
+    `;
+
+    container.appendChild(postDiv);
+  });
+}
+
+function logout() {
+  localStorage.removeItem("reelza_logged_in");
+  window.location.href = "login.html";
+}
+
+renderPosts();
+function renderAdminMessages() {
+  const box = document.getElementById("adminInbox");
+  const messages = currentUser.messages || [];
+
+  if (messages.length === 0) {
+    box.innerText = "No messages.";
+    return;
+  }
+
+  messages.reverse().forEach((msg) => {
+    const msgDiv = document.createElement("div");
+    msgDiv.style.marginBottom = "10px";
+    msgDiv.innerHTML = `
+      <strong>Admin:</strong> ${msg.content}<br>
+      <small>${msg.time}</small><hr style="border-color:#333;">
+    `;
+    box.appendChild(msgDiv);
+  });
+}
+function renderSearchResults() {
+  const query = document.getElementById("searchUsersInput").value.toLowerCase();
+  const resultsContainer = document.getElementById("searchResults");
+  const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+  resultsContainer.innerHTML = "";
+
+  users.forEach((user) => {
+    if (
+      user.email !== currentUser.email &&
+      (user.username.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query))
+    ) {
+      const isFollowing = currentUser.following && currentUser.following.includes(user.email);
+      const btnText = isFollowing ? "Unfollow" : "Follow";
+
+      const div = document.createElement("div");
+      div.style.marginBottom = "10px";
+      div.innerHTML = `
+        <strong>${user.username}</strong> (${user.email})
+        <button onclick="toggleFollow('${user.email}')">${btnText}</button>
+        <hr style="border-color:#444;">
+      `;
+      resultsContainer.appendChild(div);
+    }
+  });
+}
+
+function toggleFollow(targetEmail) {
+  const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+  const myIndex = users.findIndex((u) => u.email === currentUser.email);
+  const targetIndex = users.findIndex((u) => u.email === targetEmail);
+
+  if (!users[myIndex].following) users[myIndex].following = [];
+  if (!users[targetIndex].followers) users[targetIndex].followers = [];
+
+  const isFollowing = users[myIndex].following.includes(targetEmail);
+
+  if (isFollowing) {
+    users[myIndex].following = users[myIndex].following.filter((e) => e !== targetEmail);
+    users[targetIndex].followers = users[targetIndex].followers.filter((e) => e !== currentUser.email);
+  } else {
+    users[myIndex].following.push(targetEmail);
+    users[targetIndex].followers.push(currentUser.email);
+  }
+
+  localStorage.setItem("reelza_users", JSON.stringify(users));
+  localStorage.setItem("reelza_logged_in", JSON.stringify(users[myIndex]));
+  location.reload(); // refresh to update view
+}
+
+function renderFollowers() {
+  const list1 = document.getElementById("followerList");
+  const list2 = document.getElementById("followingList");
+
+  list1.innerHTML = "";
+  list2.innerHTML = "";
+
+  const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+  const followers = currentUser.followers || [];
+  const following = currentUser.following || [];
+
+  followers.forEach((email) => {
+    const user = users.find((u) => u.email === email);
+    if (user) {
+      const li = document.createElement("li");
+      li.innerText = user.username + " (" + user.email + ")";
+      list1.appendChild(li);
+    }
+  });
+
+  following.forEach((email) => {
+    const user = users.find((u) => u.email === email);
+    if (user) {
+      const li = document.createElement("li");
+      li.innerText = user.username + " (" + user.email + ")";
+      list2.appendChild(li);
+    }
+  });
+}
+renderAdminMessages();
+renderSearchResults();
+renderFollowers();
