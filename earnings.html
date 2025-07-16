@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - My Earnings</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    input, select {
+      padding: 6px;
+      margin: 5px 0;
+      width: 100%;
+    }
+    .card {
+      background: #f0f0f0;
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>💰 My Earnings</h2>
+    <div id="earningsBox" class="card"></div>
+
+    <hr>
+    <h3>🧾 Withdraw Request</h3>
+    <div class="card">
+      <label>Choose Currency:</label>
+      <select id="currency">
+        <option value="PKR">PKR (Rs)</option>
+        <option value="USD">USD ($)</option>
+      </select>
+
+      <label>Account Info / Mobile Bank / PayPal:</label>
+      <input type="text" id="withdrawAccount" placeholder="Enter details (e.g. JazzCash, PayPal, IBAN)" />
+
+      <label>Enter Amount to Withdraw:</label>
+      <input type="number" id="withdrawAmount" placeholder="e.g. 500" />
+
+      <button onclick="submitWithdraw()">Submit Withdraw Request</button>
+    </div>
+
+    <br>
+    <a href="dashboard.html">⬅️ Back to Dashboard</a>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("reelza_logged_in"));
+    const allUsers = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+    if (!user) {
+      document.getElementById("earningsBox").innerHTML = "<p>You must login first.</p>";
+    } else {
+      const profile = allUsers.find(u => u.email === user.email);
+      const totalViews = countVideoViews(user.email);
+      const isMonetized = profile?.isMonetized;
+      const isVerified = profile?.verified;
+
+      const earnedRs = isMonetized ? Math.floor((totalViews / 1000) * 200) : 0;
+
+      profile.earnings = earnedRs;
+      localStorage.setItem("reelza_users", JSON.stringify(allUsers));
+      localStorage.setItem("reelza_logged_in", JSON.stringify(profile));
+
+      let usernameLine = `<strong>${profile.username}</strong>`;
+      if (isVerified) {
+        usernameLine += ` <span class="verified-badge" title="Verified"></span>`;
+      }
+
+      document.getElementById("earningsBox").innerHTML = `
+        <p><strong>Username:</strong> ${usernameLine}</p>
+        <p><strong>Monetized:</strong> ${isMonetized ? "✅ Yes" : "❌ No"}</p>
+        <p><strong>Total Qualified Views:</strong> ${totalViews}</p>
+        <p><strong>Earnings:</strong> Rs ${earnedRs} PKR</p>
+        <p><small>Calculation: Rs 200 per 1,000 views</small></p>
+      `;
+    }
+
+    function countVideoViews(email) {
+      let views = 0;
+      const all = JSON.parse(localStorage.getItem("reelza_users")) || [];
+      all.forEach((user) => {
+        (user.posts || []).forEach((post) => {
+          if (post.type === "video" && user.email === email) {
+            views += (post.likes || []).length;
+          }
+        });
+      });
+      return views;
+    }
+
+    function submitWithdraw() {
+      const amount = parseFloat(document.getElementById("withdrawAmount").value);
+      const method = document.getElementById("currency").value;
+      const info = document.getElementById("withdrawAccount").value;
+
+      if (!amount || !info) {
+        alert("Please fill all withdraw fields.");
+        return;
+      }
+
+      const user = JSON.parse(localStorage.getItem("reelza_logged_in"));
+      alert(`✅ Withdraw request submitted:\n\nUser: ${user.username}\nAmount: ${amount} ${method}\nAccount Info: ${info}\n\n(This is saved locally)`);
+    }
+  </script>
+</body>
+</html>

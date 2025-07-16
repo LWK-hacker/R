@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - Notifications</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>🔔 Your Notifications</h2>
+    <button onclick="clearNotifications()">🧹 Clear All Notifications</button><br><br>
+    <ul id="notificationList"></ul>
+    <br>
+    <a href="dashboard.html">⬅️ Back to Dashboard</a>
+  </div>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("reelza_logged_in"));
+    const allUsers = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+    const user = allUsers.find(u => u.email === currentUser.email);
+    const notifications = user.notifications || [];
+
+    const list = document.getElementById("notificationList");
+
+    if (notifications.length === 0) {
+      list.innerHTML = "<li>No notifications yet.</li>";
+    } else {
+      notifications.slice().reverse().forEach(n => {
+        const li = document.createElement("li");
+
+        if (n.byEmail && n.byName) {
+          const sender = allUsers.find(u => u.email === n.byEmail);
+          const isVerified = sender?.verified;
+
+          let nameLine = `<a href="user.html?email=${n.byEmail}" style="text-decoration:none;">${n.byName}</a>`;
+          if (isVerified) {
+            nameLine += ` <span class="verified-badge" title="Verified"></span>`;
+          }
+
+          li.innerHTML = `
+            🔔 ${nameLine}: ${n.msg}
+            <br><small>${n.time}</small><hr>
+          `;
+        } else {
+          li.innerHTML = `${n.msg} <br><small>${n.time}</small><hr>`;
+        }
+
+        list.appendChild(li);
+      });
+    }
+
+    function clearNotifications() {
+      const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+      const current = JSON.parse(localStorage.getItem("reelza_logged_in"));
+
+      const index = users.findIndex(u => u.email === current.email);
+      if (index !== -1) {
+        users[index].notifications = [];
+        localStorage.setItem("reelza_users", JSON.stringify(users));
+        localStorage.setItem("reelza_logged_in", JSON.stringify(users[index]));
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>

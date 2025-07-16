@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - Forgot Password</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Reset Your Password</h2>
+    <form id="forgotForm">
+      <input type="email" id="forgotEmail" placeholder="Gmail address" required /><br />
+      <label>Date of Birth:</label><br />
+      <input type="date" id="forgotDob" required /><br />
+      <input type="password" id="newPassword" placeholder="New Password" required /><br />
+      <button type="submit">Reset Password</button>
+    </form>
+    <div id="forgotError" style="color: red;"></div>
+    <p><a href="index.html">Back to Home</a></p>
+  </div>
+
+  <script src="js/forgot.js"></script>
+</body>
+</html>

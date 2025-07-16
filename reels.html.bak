@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - Reels Feed</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background: black;
+      color: white;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      overflow-y: scroll;
+    }
+    .reel {
+      height: 100vh;
+      scroll-snap-align: start;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 2px solid #222;
+    }
+    video {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: cover;
+    }
+    .caption-box {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .caption-box p {
+      margin: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="reelsContainer" <div id="reelAdBox" style="background:#ffeecc; padding:10px; margin-bottom:10px;"></div>style="scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh;"></div>
+  <script>
+  const ads = JSON.parse(localStorage.getItem("reelza_ads")) || [];
+  const reelAd = ads.find(a => a.location === "reels");
+  if (reelAd) {
+    document.getElementById("reelAdBox").innerText = "📢 " + reelAd.message;
+  }
+</script>
+  <script src="js/reels.js"></script>
+</body>
+</html>

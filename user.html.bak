@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Profile - Reelza</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>👤 User Profile</h2>
+    <div id="userInfo"></div>
+    <div id="userPosts"></div>
+    <br><br>
+    <a href="dashboard.html">⬅️ Back to Dashboard</a>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get("email");
+    const currentUser = JSON.parse(localStorage.getItem("reelza_logged_in"));
+    const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+    const profileUser = users.find(u => u.email === email);
+    const myIndex = users.findIndex(u => u.email === currentUser.email);
+    const targetIndex = users.findIndex(u => u.email === email);
+
+    if (!profileUser) {
+      document.getElementById("userInfo").innerHTML = "User not found.";
+    } else {
+      let html = `<h3>${profileUser.username}`;
+      if (profileUser.verified) html += ` <span style="color:blue;">✔️</span>`;
+      html += `</h3>`;
+      html += `<p>Email: ${profileUser.email}</p>`;
+      html += `<p>Followers: ${profileUser.followers?.length || 0} | Following: ${profileUser.following?.length || 0}</p>`;
+
+      if (profileUser.email !== currentUser.email) {
+        const isFollowing = profileUser.followers?.includes(currentUser.email);
+        html += `<button onclick="toggleFollow('${profileUser.email}')">${isFollowing ? 'Unfollow' : 'Follow'}</button>`;
+      }
+
+      document.getElementById("userInfo").innerHTML = html;
+
+      const list = document.getElementById("userPosts");
+      const posts = profileUser.posts || [];
+
+      posts.slice().reverse().forEach((post) => {
+        const div = document.createElement("div");
+        div.style.border = "1px solid #ccc";
+        div.style.padding = "10px";
+        div.style.marginBottom = "10px";
+
+        if (post.type === "image") {
+          div.innerHTML = `
+            <img src="${post.media}" width="100%"><br>
+            <p>${post.caption}</p>
+            <small>${post.timestamp}</small>
+          `;
+        } else if (post.type === "video") {
+          div.innerHTML = `
+            <video src="${post.media}" controls width="100%"></video><br>
+            <p>${post.caption}</p>
+            <small>${post.timestamp}</small>
+          `;
+        }
+
+        list.appendChild(div);
+      });
+    }
+
+    function toggleFollow(targetEmail) {
+      if (!users[myIndex].following) users[myIndex].following = [];
+      if (!users[targetIndex].followers) users[targetIndex].followers = [];
+
+      const isFollowing = users[myIndex].following.includes(targetEmail);
+
+      if (isFollowing) {
+        users[myIndex].following = users[myIndex].following.filter((e) => e !== targetEmail);
+        users[targetIndex].followers = users[targetIndex].followers.filter((e) => e !== currentUser.email);
+      } else {
+        users[myIndex].following.push(targetEmail);
+        users[targetIndex].followers.push(currentUser.email);
+      }
+
+      localStorage.setItem("reelza_users", JSON.stringify(users));
+      localStorage.setItem("reelza_logged_in", JSON.stringify(users[myIndex]));
+      location.reload();
+    }
+  </script>
+</body>
+</html>

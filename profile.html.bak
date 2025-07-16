@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Profile - Reelza</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .post-box {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+  <div id="profileAdBox" style="background:#fff4cc; padding:10px; margin-bottom:10px;"></div>
+    <h2>👤 My Profile</h2>
+    <div id="profileInfo"></div>
+    <h3>📸 My Posts</h3>
+    <div id="postList"></div>
+    <br>
+    <a href="dashboard.html">⬅️ Back to Dashboard</a>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("reelza_logged_in"));
+    const allUsers = JSON.parse(localStorage.getItem("reelza_users")) || [];
+    const profile = allUsers.find(u => u.email === user.email);
+
+    const postList = document.getElementById("postList");
+    const profileInfo = document.getElementById("profileInfo");
+
+    // 🧾 Show basic info
+    profileInfo.innerHTML = `
+      <p><strong>Username:</strong> ${profile.username}</p>
+      <p><strong>Email:</strong> ${profile.email}</p>
+      <p><strong>Followers:</strong> ${profile.followers?.length || 0}</p>
+      <p><strong>Following:</strong> ${profile.following?.length || 0}</p>
+    `;
+
+    const posts = profile.posts || [];
+
+    if (posts.length === 0) {
+      postList.innerHTML = "<p>You haven't uploaded anything yet.</p>";
+    } else {
+      posts.slice().reverse().forEach(post => {
+        const div = document.createElement("div");
+        div.className = "post-box";
+
+        if (post.type === "image") {
+          div.innerHTML = `<img src="${post.media}" width="100%" /><p>${post.caption}</p><small>${post.timestamp}</small>`;
+        } else if (post.type === "video") {
+          div.innerHTML = `<video src="${post.media}" controls width="100%"></video><p>${post.caption}</p><small>${post.timestamp}</small>`;
+        }
+
+        postList.appendChild(div);
+      });
+    }
+    const ads = JSON.parse(localStorage.getItem("reelza_ads")) || [];
+const profileAd = ads.find(a => a.location === "profile");
+if (profileAd) {
+  document.getElementById("profileAdBox").innerText = "📢 " + profileAd.message;
+}
+  </script>
+</body>
+</html>

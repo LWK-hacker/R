@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - Welcome</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <img src="assets/logo.png" alt="Reelza Logo" width="100" />
+    <h1>Welcome to Reelza</h1>
+    <a href="signup.html">Create Account</a> |
+    <a href="forgot.html">Forgot Password?</a>
+  </div>
+</body>
+</html>

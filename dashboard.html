@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - Dashboard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <div id="adBox" style="background:#ffffcc; padding:10px; margin-bottom:10px;"></div>
+    <h2>Welcome to Reelza</h2>
+    <p id="userInfo"></p>
+    <a href="reels.html" style="color:#E100FF;">🎥 Watch Reels</a>
+    <br><br>
+
+    <hr>
+    <h3>Search Users to Follow</h3>
+    <input type="text" id="searchUsersInput" placeholder="Search by name or Gmail..." oninput="renderSearchResults()" />
+    <div id="searchResults"></div>
+
+    <hr>
+    <h3>Create a Post</h3>
+    <form id="postForm">
+      <textarea id="caption" placeholder="Write something..." rows="3" required></textarea><br>
+      <input type="file" id="media" accept="image/*,video/*" required /><br>
+      <button type="submit">Post</button>
+    </form>
+    <div id="postStatus"></div>
+
+    <hr>
+    <h3>Your Posts</h3>
+    <div id="postList"></div>
+
+    <hr>
+    <h3>Admin Messages</h3>
+    <div id="adminInbox"></div>
+
+    <hr>
+    <h3>Your Followers</h3>
+    <ul id="followerList"></ul>
+
+    <h3>Your Following</h3>
+    <ul id="followingList"></ul>
+    <br>
+    <a href="reels.html" style="color:#E100FF;">🎥 Watch Reels</a><br>
+    <a href="explore.html">🔍 Explore</a><br>
+    <a href="earnings.html">💰 My Earnings</a><br>
+    <a href="notifications.html">🔔 Notifications</a><br>
+    <a href="profile.html">👤 My Profile</a><br><br>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const ads = JSON.parse(localStorage.getItem("reelza_ads")) || [];
+    const dashboardAd = ads.find(a => a.location === "dashboard");
+    if (dashboardAd) {
+      document.getElementById("adBox").innerText = "📢 " + dashboardAd.message;
+    }
+  </script>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("reelza_logged_in"));
+    const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+    function renderImageComments(comments, boxId) {
+      const box = document.getElementById(boxId);
+      box.innerHTML = "";
+
+      comments.slice().reverse().forEach(c => {
+        const div = document.createElement("div");
+        div.innerHTML = `<strong>${c.by}</strong>: ${c.text} <br><small>${c.at}</small><hr style="border-color:#ccc;">`;
+        box.appendChild(div);
+      });
+    }
+
+    function addImageComment(mediaUrl, boxId, inputId) {
+      const comment = document.getElementById(inputId).value.trim();
+      if (!comment) return;
+
+      const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+      const current = JSON.parse(localStorage.getItem("reelza_logged_in"));
+      if (!current) return alert("Login required");
+
+      let owner = users.find(u => u.posts && u.posts.some(p => p.media === mediaUrl));
+      let post = owner.posts.find(p => p.media === mediaUrl);
+
+      if (!post.comments) post.comments = [];
+      post.comments.push({
+        text: comment,
+        by: current.username,
+        at: new Date().toLocaleString()
+      });
+
+      localStorage.setItem("reelza_users", JSON.stringify(users));
+      document.getElementById(inputId).value = "";
+      renderImageComments(post.comments, boxId);
+    }
+
+    function renderUserPosts() {
+      const list = document.getElementById("postList");
+      list.innerHTML = "";
+
+      const posts = currentUser.posts || [];
+
+      posts.slice().reverse().forEach((post, index) => {
+        const div = document.createElement("div");
+        div.style.border = "1px solid #ccc";
+        div.style.padding = "10px";
+        div.style.marginBottom = "10px";
+
+        let usernameLine = `<strong><a href="user.html?email=${currentUser.email}" style="text-decoration:none;">${currentUser.username}</a></strong>`;
+        if (currentUser.verified) {
+          usernameLine += ` <span class="verified-badge" title="Verified"></span>`;
+        }
+
+        if (post.type === "image") {
+          const commentBoxId = `commentBox${index}`;
+          const commentInputId = `commentInput${index}`;
+          div.innerHTML = `
+            <p>${usernameLine}</p>
+            <img src="${post.media}" width="100%" /><br>
+            <p>${post.caption}</p>
+            <small>${post.timestamp}</small><br><br>
+            <input type="text" id="${commentInputId}" placeholder="Add comment..." style="width: 70%;">
+            <button onclick="addImageComment('${post.media}', '${commentBoxId}', '${commentInputId}')">💬</button>
+            <div id="${commentBoxId}" style="font-size:13px; margin-top:5px;"></div>
+          `;
+
+          if (post.comments) {
+            renderImageComments(post.comments, commentBoxId);
+          }
+        } else if (post.type === "video") {
+          div.innerHTML = `
+            <p>${usernameLine}</p>
+            <video src="${post.media}" controls width="100%"></video><br>
+            <p>${post.caption}</p>
+            <small>${post.timestamp}</small>
+          `;
+        }
+
+        list.appendChild(div);
+      });
+    }
+
+    renderUserPosts();
+
+    function logout() {
+      localStorage.removeItem("reelza_logged_in");
+      window.location.href = "index.html";
+    }
+  </script>
+
+  <script src="js/post.js"></script>
+</body>
+</html>

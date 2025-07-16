@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - Profile</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>👤 Your Profile</h2>
+    <div id="info"></div>
+    <br>
+    <a href="edit-profile.html">✏️ Edit Profile</a><br><br>
+    <a href="dashboard.html">⬅️ Back to Dashboard</a><br><br>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("reelza_logged_in"));
+    if (!user) {
+      alert("Login first");
+      window.location.href = "index.html";
+    }
+
+    const infoBox = document.getElementById("info");
+    infoBox.innerHTML = `
+      <p><strong>Name:</strong> ${user.username}</p>
+      <p><strong>Email:</strong> ${user.email}</p>
+      <p><strong>Bio:</strong> ${user.bio || "N/A"}</p>
+      <p><strong>Gender:</strong> ${user.gender || "N/A"}</p>
+      <p><strong>Date of Birth:</strong> ${user.dob || "N/A"}</p>
+    `;
+
+    function logout() {
+      localStorage.removeItem("reelza_logged_in");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

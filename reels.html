@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reelza - Reels Feed</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background: black;
+      color: white;
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      overflow-y: scroll;
+    }
+    .reel {
+      height: 100vh;
+      scroll-snap-align: start;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-bottom: 2px solid #222;
+    }
+    video {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: cover;
+    }
+    .caption-box {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 10px;
+      width: 80%;
+    }
+    .caption-box p {
+      margin: 4px 0;
+      font-size: 14px;
+    }
+    .like-btn {
+      background: none;
+      border: none;
+      color: red;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="reelAdBox" style="background:#ffeecc; color:black; padding:10px;"></div>
+  <div id="reelsContainer" style="scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh;"></div>
+
+  <script>
+    const currentUser = JSON.parse(localStorage.getItem("reelza_logged_in"));
+    const users = JSON.parse(localStorage.getItem("reelza_users")) || [];
+
+    const container = document.getElementById("reelsContainer");
+
+    let allReels = [];
+
+    users.forEach(user => {
+      if (user.reels && Array.isArray(user.reels)) {
+        const isOwn = user.email === currentUser.email;
+        const isFollowing = user.followers?.includes(currentUser.email);
+        const isPrivate = user.private;
+
+        if (!isPrivate || isOwn || isFollowing) {
+          user.reels.forEach(reel => {
+            allReels.push({
+              media: reel.media,
+              caption: reel.caption,
+              username: user.username,
+              verified: user.verified,
+              email: user.email
+            });
+          });
+        }
+      }
+    });
+
+    allReels.reverse();
+
+    allReels.forEach((reel, i) => {
+      const div = document.createElement("div");
+      div.className = "reel";
+
+      const usernameLine = `<strong><a href="user.html?email=${reel.email}" style="color:white;text-decoration:none;">${reel.username}</a></strong>` + (reel.verified ? ' <span style="color:deepskyblue;">✔️</span>' : '');
+
+      const likes = JSON.parse(localStorage.getItem("reelza_likes")) || {};
+      const key = `reel_${reel.media}`;
+      const isLiked = likes[key];
+
+      div.innerHTML = `
+        <video src="${reel.media}" autoplay muted loop></video>
+        <div class="caption-box">
+          <p>${usernameLine}</p>
+          <p>${reel.caption}</p>
+          <button class="like-btn" onclick="toggleLike('${key}', this)">${isLiked ? '❤️' : '🤍'}</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+
+    function toggleLike(key, btn) {
+      let likes = JSON.parse(localStorage.getItem("reelza_likes")) || {};
+      likes[key] = !likes[key];
+      localStorage.setItem("reelza_likes", JSON.stringify(likes));
+      btn.innerText = likes[key] ? '❤️' : '🤍';
+    }
+
+    const ads = JSON.parse(localStorage.getItem("reelza_ads")) || [];
+    const reelAd = ads.find(a => a.location === "reels");
+    if (reelAd) {
+      document.getElementById("reelAdBox").innerText = "📢 " + reelAd.message;
+    }
+  </script>
+</body>
+</html>
